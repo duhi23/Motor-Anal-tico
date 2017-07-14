@@ -6,7 +6,6 @@ datos <- data.table(read_tsv("TemplateCobranzaTotal.txt"))
 vars <- colnames(datos)[as.vector(which(unlist(lapply(datos, class)) == "numeric"))]
 var_num <- as.vector(which(unlist(lapply(datos, class)) == "numeric"))
 
-
 perdido <- function(x){
       val <- any(is.na(x))
       return(val)
@@ -18,7 +17,7 @@ atipico <- function(x){
       return(val)
 }
 
-var_per <- which(unlist(lapply(datos[,vars, with=FALSE], perdido)))
+system.time(var_per <- which(unlist(lapply(datos[,vars, with=FALSE], perdido))))
 # var_per deberia ser un data.frame que a mas de contener el numero de la columna
 # que presenta valores perdidos, debe poseer el valor a reemplazar
 for(i in 1:length(var_per)){
@@ -27,7 +26,7 @@ for(i in 1:length(var_per)){
 }
 
 
-var_atp <- which(unlist(lapply(datos[,vars, with=FALSE], atipico)))
+system.time(var_atp <- which(unlist(lapply(datos[,vars, with=FALSE], atipico))))
 # var_atp deberia ser un data.frame que a mas de contener el numero de la columna que
 # presenta valores atipicos, debe poseer el valor a reemplazar o a su vez eliminar
 
@@ -39,14 +38,9 @@ for(i in 1:nrow(tabla)){
       datos[ , (cols) := lapply(.SD, "%a%", tabla[i,2]), .SDcols = cols]
 })
 
-user  system elapsed 
-4.459   2.507   7.035 
 
 system.time(lapply(1:nrow(tabla), function(i){cols <- tabla[i,1]; 
 datos[ , (cols) := lapply(.SD, "%a%", tabla[i,2]), .SDcols = cols]}))
-
-user  system elapsed 
-4.351   2.295   6.654
 
 
 "%p%" <- function(x, val){
@@ -58,4 +52,33 @@ user  system elapsed
       x[x > median(x, na.rm = TRUE) + 1.5*IQR(x, na.rm = TRUE)] <- val
       x[x < median(x, na.rm = TRUE) - 1.5*IQR(x, na.rm = TRUE)] <- val
       return(x)
+}
+
+
+
+
+datos <- data.table(read_tsv("TemplateCobranzaTotal.txt"))
+vars <- colnames(datos)[as.vector(which(unlist(lapply(datos, class)) == "numeric"))]
+var_num <- as.vector(which(unlist(lapply(datos, class)) == "numeric"))
+
+# Función atipico 
+# data: datos en formato data.table sin valores perdidos
+# vars: vector de variables numéricas
+# retorna vector de nombres de variables con valores atipicos
+is.atipico <- function(data, vars){
+      atipico <- function(x){
+            val <- any(x > median(x) + 1.5*IQR(x)) | any(x < median(x) - 1.5*IQR(x))
+            return(val)
+      }
+      ls_atp <- vars[as.vector(which(unlist(lapply(data[,vars, with=FALSE], atipico))))]
+      return(ls_atp)
+}
+
+vars_atp <- is.atipico(datos, vars)
+
+tabla <- data.frame()
+
+
+atipico <- function(data, criterio){
+      nvars <- nrow(criterio)
 }
