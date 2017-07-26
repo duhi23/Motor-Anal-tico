@@ -13,7 +13,11 @@ var_num <- as.vector(which(unlist(lapply(datos, class)) == "numeric"))
 # retorna vector de nombres de variables con valores atipicos
 is.atipico <- function(data, vars){
       atipico <- function(x){
-            val <- any(x > median(x) + 1.5*IQR(x)) | any(x < median(x) - 1.5*IQR(x))
+            if(IQR(x)>0){
+                  val <- any(x > median(x) + 1.5*IQR(x)) | any(x < median(x) - 1.5*IQR(x))
+            } else {
+                  val <- FALSE
+            }
             return(val)
       }
       ls_atp <- vars[as.vector(which(unlist(lapply(data[,vars, with=FALSE], atipico))))]
@@ -61,5 +65,4 @@ atipico <- function(data, criterio, vars){
       return(data)
 }
 
-
-
+atipico(datos, tabla, vars)
