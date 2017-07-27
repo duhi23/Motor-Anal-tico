@@ -14,14 +14,20 @@ var_num <- as.vector(which(unlist(lapply(datos, class)) == "numeric"))
 is.atipico <- function(data, vars){
       atipico <- function(x){
             if(IQR(x)>0){
-                  val <- any(x > median(x) + 1.5*IQR(x)) | any(x < median(x) - 1.5*IQR(x))
+                  valmin <- median(x) - 1.5*IQR(x)
+                  valmax <- median(x) + 1.5*IQR(x)
+                  val <- any(x > valmax) | any(x < valmin)
+                  if(valmin <0) valmin <- 0 # evitamos valores negativos en las variables
+                  res <- data.frame(atipico=val, lim_min=valmin, lim_max=valmax)
             } else {
-                  val <- FALSE
+                  res <- data.frame(atipico=FALSE, lim_min=-999, lim_max=-999)
             }
-            return(val)
+            return(res)
       }
-      ls_atp <- vars[as.vector(which(unlist(lapply(data[,vars, with=FALSE], atipico))))]
-      return(ls_atp)
+      df_atp <- do.call(rbind.data.frame, lapply(data[,vars, with=FALSE], atipico))
+      ls_atp <- df_atp[df_atp$atipico==TRUE,]
+      val <- data.frame(Variable=row.names(ls_atp), val_min=ls_atp$lim_min, val_max=round(ls_atp$lim_max,2))
+      return(val)
 }
 
 vars_atp <- is.atipico(datos, vars)
